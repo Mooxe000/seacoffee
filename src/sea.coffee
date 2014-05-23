@@ -1,0 +1,1 @@
+return if global.seajs?

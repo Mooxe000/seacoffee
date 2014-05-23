@@ -1,0 +1,30 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    title Mocha Test
+    link(href='mocha.css', rel='stylesheet')
+
+  body
+    div#mocha Mocha Test
+    script(src='mocha.js')
+    script(src='chai.js')
+    script(type='text/javascript').
+      mocha.ui('bdd');
+      mocha.reporter('html');
+      expect = chai.expect;
+    script(type='text/javascript').
+      var title = document.title;
+      var should = chai.should();
+      describe('chai', function() {
+        it('chai', function() {
+          title.should.equal('Mocha Test');
+        });
+      });
+    script(type='text/javascript').
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      }
+      else {
+        mocha.run();
+      }
