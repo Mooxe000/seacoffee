@@ -6,6 +6,7 @@ require 'shelljs/global'
 echo = console.log
 inspect = require('util').inspect
 path = require 'path'
+{join} = path
 
 gulp = require 'gulp'
 debug = require 'gulp-debug'
@@ -28,8 +29,10 @@ beautify = require 'gulp-beautify'
 ###
   PATH
 ###
-srcpath = path.join __dirname, './src'
-dstpath = path.join __dirname, './dist'
+srcpath = join __dirname, './src'
+dstpath = join __dirname, './dist'
+libpath = join __dirname, './test/specs/@base/lib'
+nodpath = join __dirname, './node_modules'
 
 VERSION = '2.3.0'
 
@@ -99,6 +102,9 @@ gulp.task 'clean', ->
   gulp.src dstpath
   .pipe clean()
 
+  gulp.src libpath
+  .pipe clean()
+
 gulp.task 'build', ->
   gulp.src seaModPath()
   # compile coffee
@@ -152,5 +158,18 @@ gulp.task 'build', ->
     """
   .pipe gulp.dest dstpath
 
+gulp.task 'dmplib', ->
+  gulp.src join dstpath, '/*'
+  .pipe gulp.dest libpath
+
+  mochaPath = join nodpath, '/mocha'
+  chaiPath = join nodpath, '/chai'
+
+  gulp.src [(join mochaPath, '/mocha.css'), (join mochaPath, '/mocha.js')]
+  .pipe gulp.dest libpath
+
+  gulp.src (join chaiPath, '/chai.js')
+  .pipe gulp.dest libpath
+
 gulp.task 'default', ->
-  runSequence 'clean', 'build'
+  runSequence 'clean', 'build', 'dmplib'
