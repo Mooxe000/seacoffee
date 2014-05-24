@@ -1,0 +1,37 @@
+doctype html
+
+block config
+  - var libpath = '/@base/lib/'
+  - var config = {}
+  - config.mochaCss = libpath + 'mocha.css'
+  - config.mochaJs = libpath + 'mocha.js'
+  - config.chaiJs = libpath + 'chai.js'
+  - config.seaJs = libpath + 'sea-debug.js'
+
+html
+
+  head
+    meta(charset="utf-8")
+    link(href=config.mochaCss, type='text/css', rel='stylesheet')
+    block base_head
+      title Test Mocha
+
+  body
+    div#mocha
+    script(src=config.mochaJs)
+    script(src=config.chaiJs)
+    script(src=config.seaJs)
+    script(type='text/javascript').
+      document.getElementById('mocha').innerHTML = document.title;
+      mocha.ui('bdd');
+      mocha.reporter('html');
+      expect = chai.expect;
+      should = chai.should();
+    block test_entry
+    script(type='text/javascript').
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      }
+      else {
+        mocha.run();
+      }

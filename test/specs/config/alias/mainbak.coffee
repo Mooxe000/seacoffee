@@ -1,6 +1,7 @@
 alias =
   'a': 'config/alias/path/to/a'
   'biz/b': 'config/alias/path/to/biz/b'
+  'c': 'config/alias/path/to/c.js'
 
 seajs.config
   alias: alias
@@ -13,17 +14,10 @@ define (require) ->
 
       a = require 'a'
       b = require 'biz/b'
+      c = require 'c'
+
       a.name.should.equal 'a'
       b.name.should.equal 'b'
-
-      alias =
-        'a': 'x'
-        'c': 'config/alias/path/to/c.js'
-
-      seajs.config
-        alias: alias
-
-      c = seajs.require 'c'
       c.name.should.equal 'c'
 
 # TODO
