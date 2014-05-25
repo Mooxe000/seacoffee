@@ -7,10 +7,9 @@ seajs.config
 
 define (require) ->
 
-  describe 'config', ->
+  describe 'config_alias', =>
 
-    it 'alias', ->
-
+    it 'require', =>
       a = require 'a'
       b = require 'biz/b'
       a.name.should.equal 'a'
@@ -23,8 +22,24 @@ define (require) ->
       seajs.config
         alias: alias
 
-      c = seajs.require 'c'
-      c.name.should.equal 'c'
+      return
 
-# TODO
-# require.async
+    it 'require_async', (done) =>
+      require.async 'c', (c) ->
+        c.name.should.equal 'c'
+        done()
+        return
+      return
+
+    it 'require_promised', (done) =>
+      requireC = ->
+        deferred = Q.defer()
+        require.async 'c', (c) ->
+          deferred.resolve c.name
+        deferred.promise
+
+      promise = requireC()
+      promise
+      .should.eventually
+      .equal 'c'
+      .notify done

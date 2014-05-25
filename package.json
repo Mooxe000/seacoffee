@@ -32,6 +32,8 @@
     "mocha": "*",
     "mocha-phantomjs": "*",
     "chai": "*",
+    "q": "*",
+    "chai-as-promised": "*",
     "karma": "*",
     "karma-cli": "*",
     "karma-mocha": "*",

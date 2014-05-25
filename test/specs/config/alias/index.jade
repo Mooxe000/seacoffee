@@ -1,7 +1,15 @@
 extends ../../@base/base
 
+block append config
+  - config.qJs = libpath + 'q.js'
+  - config.chaipromisedJs = libpath + 'chai-as-promised.js'
+
 block base_head
   title Test Seajs config/alias
+
+block append IMscript
+  script(src=config.qJs)
+  script(src=config.chaipromisedJs)
 
 block test_entry
   script(src='init.js')

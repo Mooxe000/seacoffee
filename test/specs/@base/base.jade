@@ -18,9 +18,10 @@ html
 
   body
     div#mocha
-    script(src=config.mochaJs)
-    script(src=config.chaiJs)
-    script(src=config.seaJs)
+    block IMscript
+      script(src=config.mochaJs)
+      script(src=config.chaiJs)
+      script(src=config.seaJs)
     script(type='text/javascript').
       document.getElementById('mocha').innerHTML = document.title;
       mocha.ui('bdd');

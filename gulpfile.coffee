@@ -164,11 +164,19 @@ gulp.task 'dmplib', ->
 
   mochaPath = join nodpath, '/mocha'
   chaiPath = join nodpath, '/chai'
+  chaipromisedPath = join nodpath, '/chai-as-promised'
+  qPath = join nodpath, '/q'
 
   gulp.src [(join mochaPath, '/mocha.css'), (join mochaPath, '/mocha.js')]
   .pipe gulp.dest libpath
 
   gulp.src (join chaiPath, '/chai.js')
+  .pipe gulp.dest libpath
+
+  gulp.src (join qPath, '/q.js')
+  .pipe gulp.dest libpath
+
+  gulp.src (join chaipromisedPath, '/lib/chai-as-promised.js')
   .pipe gulp.dest libpath
 
 gulp.task 'default', ->
