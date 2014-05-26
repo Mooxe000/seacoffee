@@ -35,6 +35,7 @@ request = (url, callback, charset) ->
 
   baseElement = getBaseEle()
   # ref: #185 & http://dev.jquery.com/ticket/2709
+  head = getHead()
   if baseElement?
     head.insertBefore node, baseElement
   else head.appendChild node

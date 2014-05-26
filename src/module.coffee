@@ -105,7 +105,9 @@ class Module
 
     # Send all requests at last to avoid cache bug in IE6-9. Issues#808
     for requestUri in requestCache
-      requestCache[requestUri] if requestCache.hasOwnProperty requestUri
+      requestCache[requestUri]() if requestCache.hasOwnProperty requestUri
+
+    return
 
   # Call this method when module is loaded
   onload: =>
@@ -373,7 +375,9 @@ class Module
     data = getData()
     {cachedMods} = data
     {get} = Module
+
     mod = get uri, if isArray ids then ids else [ids]  # make sure typeof ids is array
+
     mod.callback = ->
       exports = []
       uris = mod.resolve()
@@ -381,7 +385,8 @@ class Module
         exports.push cachedMods[uri].exec()
       callback.apply global, exports if callback?
       delete mod.callback
-    mod.load data
+
+    mod.load()
     return
 
   @define.cmd = {}
