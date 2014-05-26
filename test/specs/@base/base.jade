@@ -7,6 +7,7 @@ block config
   - config.mochaJs = libpath + 'mocha.js'
   - config.chaiJs = libpath + 'chai.js'
   - config.seaJs = libpath + 'sea-debug.js'
+  - config.initJs = '/@base/init.js'
 
 html
 
@@ -28,6 +29,7 @@ html
       mocha.reporter('html');
       expect = chai.expect;
       should = chai.should();
+    script(src=config.initJs)
     block test_entry
     script(type='text/javascript').
       if (window.mochaPhantomJS) {

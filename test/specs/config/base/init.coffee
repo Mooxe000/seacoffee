@@ -1,0 +1,1 @@
+seajs.use 'config_base', -> mocha.run()
