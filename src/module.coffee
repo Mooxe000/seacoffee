@@ -104,7 +104,7 @@ class Module
         else m.load()
 
     # Send all requests at last to avoid cache bug in IE6-9. Issues#808
-    for requestUri in requestCache
+    for requestUri of requestCache
       requestCache[requestUri]() if requestCache.hasOwnProperty requestUri
 
     return
@@ -164,12 +164,15 @@ class Module
     callbackList[requestUri] = [mod]
 
     onRequest = ->
-      delete fetchingList[requestUri]
+      data = getData()
+      {anonymousMeta} = data
+      {fetchingList} = data
 
+      delete fetchingList[requestUri]
       fetchedList[requestUri] = true
 
       # Save meta data of anonymous module
-      if anonymousMeta
+      if anonymousMeta?
         Module.save uri, anonymousMeta
         anonymousMeta = null
 
@@ -193,7 +196,7 @@ class Module
       request emitData.requestUri, emitData.onRequest, emitData.charset
       return
 
-    unless emitData.requested
+    unless emitData.requested?
       if requestCache?
         requestCache[emitData.requestUri] = sendRequest
       else sendRequest()
@@ -217,9 +220,11 @@ class Module
     # Create require
     {uri} = mod
 
-    require = (id) -> get require.resolve(id).exec()
+    require = (id) -> get(require.resolve id).exec()
     require.resolve = (id) -> resolve id, uri
     require.async = (ids, callback) ->
+      data = getData()
+      {cid} = data
       use ids, callback, uri + "_async_" + cid()
       require
 
@@ -344,7 +349,7 @@ class Module
     emit "define", meta
 
     # Save information for "saving" work in the script onload event
-    if meta.uri?
+    if meta.uri
       save meta.uri, meta
     else data.anonymousMeta = meta
     return
