@@ -6,8 +6,6 @@ utilLang = require './util-lang'
 {isObject} = utilLang
 {isArray} = utilLang
 {isFunction} = utilLang
-utilPath = require './util-path'
-{addBase} = utilPath
 utilEvents = require './util-events'
 {emit} = utilEvents
 utilRequest = require './util-request'
@@ -17,6 +15,8 @@ utilDeps = require './util-deps'
 utilDom = require './util-dom'
 {getCurrentScript} = utilDom
 {getDoc} = utilDom
+config = require './config'
+{id2Uri} = config
 
 # 模块加载 的 六个 阶段
 # 1 - The `module.uri` is being fetched
@@ -242,58 +242,6 @@ class Module
     # Emit `exec` event
     emit "exec", mod
     exports
-
-  # The configuration for the loader
-  # 配置 加载器
-  # 配置 挂至 data 对象下
-  # data.alias
-  #   - An object containing shorthands of module id
-  #   - 设置 模块 ID 别名
-  # data.paths
-  #   - An object containing path shorthands in module id
-  #   - 设置 模块 路径 别名
-  # data.vars
-  #   - The {xxx} variables in module id
-  #   - 设置 模块 ID 变量 别名
-  # data.map
-  #   - An array containing rules to map module uri
-  #   - 一个 模块 键值对 列表
-  # data.debug
-  #   - Debug mode. The default value is false
-  #   - Debug 模式，默认 不开启
-  @config: (configData) ->
-    data = getData()
-    # 遍历 config 对象
-    for key of configData
-      curr = configData[key]      # 当前配置
-      prev = data[key]            # 已加载配置
-
-      # Merge object config such as alias, vars
-      # 合并 当前配置与已加载配置项
-      if prev? and isObject(prev) # 已加载配置存在 且 为对象 （遍历子对象）
-        for k of curr             # 遍历 子对象
-          prev[k] = curr[k]       # 将已加载配置同名键 值替换为当前配置
-      else
-
-        # Concat array config such as map
-        # 配置项为 array 时，直接合并
-        if isArray(prev)
-          curr = prev.concat(curr)
-
-          # Make sure that `data.base` is an absolute path
-          # 既不为 obj，又不为 arr，对 base 做特殊处理
-        else if key is "base"
-
-          # Make sure end with "/"
-          # 对 base 字段 末尾 补 “/”
-          curr += "/"  if curr.slice(-1) isnt "/"
-          curr = addBase curr    # 添加进 Base
-
-        # Set config
-        # 其他情况 挂至 seajs.data
-        data[key] = curr
-    emit "config", configData
-    return
 
   # Resolve id to uri
   @resolve: (id, refUri) ->

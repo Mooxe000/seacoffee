@@ -1,11 +1,12 @@
 seajs.config
-  base: '../base'
+  base: '/config/base'
 
 define (require) ->
 
-  describe 'config_base', =>
+  describe 'config_alias', =>
 
     it 'require', =>
       a = require 'a'
+      b = require 'b'
       a.name.should.equal 'a'
-      return
+      b.name.should.equal 'b'

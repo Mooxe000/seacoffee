@@ -3,14 +3,9 @@
 #   - The utilities for operating path such as id, uri
 #
 
-utilLang = require './util-lang'
-{isString} = utilLang
-{isFunction} = utilLang
 utilDom = require './util-dom'
 {getLoaderScript} = utilDom
 {getScriptAbsoluteSrc} = utilDom
-
-getData = -> seajs.getData()
 
 RE =
   DIRNAME: /[^?#]*\//
@@ -70,92 +65,9 @@ normalize = (path) ->
   else # 默认无后缀识别为 js
     path + ".js"
 
-# 依次 从 seajs.config [alias, paths, vars] 中查找模块 url
-parseAlias = (id) ->
-  data = getData()
-  {alias} = data
-  return id unless alias?
-  if isString alias[id]
-    alias[id]
-  else id
-
-parsePaths = (id) ->
-  data = getData()
-  {paths} = data
-  return id unless paths?
-  if id.match RE.PATHS and isString paths[m[1]]
-    id = paths[m[1]] + m[2]
-  id
-
-parseVars = (id) ->
-  data = getData()
-  {vars} = data
-  return id unless vars?
-  if id.indexOf "{" > -1
-    id = id.replace RE.VARS, (m, key) ->
-      if isString vars[key] then vars[key] else m
-  id
-
-parseMap = (uri) ->
-  data = getData()
-  {map} = data
-  return uri unless map?
-  ret = uri
-  for rule in map
-    if isFunction rule
-      ret = rule(uri) or uri
-    else
-      ret = uri.replace rule[0], rule[1]
-    # Only apply the first matched rule
-    break unless ret is uri
-  ret
-
-addBase = (id, refUri) ->
-  data = getData()
-  first = id.charAt 0
-
-  # Absolute
-  # online url like 'http://'
-  if RE.ABSOLUTE.test id
-    ret = id
-
-  # Relative './blabla/blabla'
-  # 相对路径
-  else if first is "."
-    ret = realpath (if refUri? then dirname refUri else cwd) + id
-
-  # Root '/blabla/blabla'
-  # 绝对路径
-  else if first is "/"
-    m = data.cwd.match RE.ROOT_DIR
-    ret = if m then m[0] + id.substring 1 else id
-
-  # Top-level
-  else ret = data.base + id
-  
-  # Add default protocol when uri begins with "//"
-  ret = location.protocol + ret if ret.indexOf("//") is 0
-  ret
-
-id2Uri = (id, refUri) ->
-  return '' unless id?
-  id = parseAlias id
-  id = parsePaths id
-  id = parseVars id
-  id = normalize id
-  uri = addBase id, refUri
-  uri = parseMap uri
-  uri
-
 exports.RE = RE
 exports.dirname = dirname
 exports.cwd = cwd
 exports.getLoaderDir = getLoaderDir
 exports.realpath = realpath
 exports.normalize = normalize
-exports.parseAlias = parseAlias
-exports.parsePaths = parsePaths
-exports.parseVars = parseVars
-exports.parseMap = parseMap
-exports.addBase = addBase
-exports.id2Uri = id2Uri

@@ -1,23 +1,25 @@
-seajs = {}
 #
 # Api For Developers
 #
-utilLang = require './util-lang'
+
+seajs = {}
+
+# utilLang = require './util-lang'
 utilEvents = require './util-events'
 eventOn = utilEvents.on
 eventOff = utilEvents.off
 {emit} = utilEvents
-utilDom = require './util-dom'
-utilDeps = require './util-deps'
-utilPath = require './util-path'
-{id2Uri} = utilPath
 utilRequest = require './util-request'
 {request} = utilRequest
+# utilDom = require './util-dom'
+# utilDeps = require './util-deps'
+Config = require './config'
+{id2Uri} = Config
+{config} = Config
 Module = require './module'
 {get} = Module
 {use} = Module
 {resolve} = Module
-{config} = Module
 data = require './data'
 
 seajs.cache = data.cachedMods

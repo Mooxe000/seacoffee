@@ -45,6 +45,7 @@ seaModule = [
   'util-events'
   'util-request'
   'data'
+  'config'
   'module'
   'Api'
 ]
@@ -56,6 +57,7 @@ seaModPath = ->
   seaModule_r
 
 utilGrp = gulpGrp '**/util-*.js'
+configGrp = gulpGrp '**/config.js'
 moduleGrp = gulpGrp '**/module.js'
 dataGrp = gulpGrp '**/data.js'
 apiGrp = gulpGrp '**/Api.js'
@@ -116,6 +118,11 @@ gulp.task 'build', ->
   .pipe tap wrapMod
   .pipe concat 'util.js'
   .pipe utilGrp.restore()
+  # wrap config
+  .pipe configGrp
+  .pipe tap wrapMod
+  .pipe concat 'config.js'
+  .pipe configGrp.restore()
   # wrap module
   .pipe moduleGrp
   .pipe tap wrapMod

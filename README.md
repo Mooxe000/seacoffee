@@ -72,3 +72,9 @@
 # 注入 require & require.async 方法 至 define 方法
 
 require 依赖是 通过 正则分析源码得到的加载项
+
+# 其他人栽的一些树
+
+* [Seajs 简易文档](http://yslove.net/seajs/)
+* [Seajs 手册与文档](http://www.zhangxinxu.com/sp/seajs/docs/zh-cn/configuration.html) -- by [张鑫旭](http://www.zhangxinxu.com/wordpress/)
+* [Hello Seajs](http://island205.github.io/HelloSea.js/)-:-:-[SOURCE](https://github.com/island205/HelloSea.js)
