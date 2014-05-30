@@ -44,6 +44,7 @@ seaModule = [
   'util-path'
   'util-events'
   'util-request'
+  'util-debug'
   'data'
   'config'
   'module'
