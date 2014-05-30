@@ -13,6 +13,8 @@ utilRequest = require './util-request'
 {request} = utilRequest
 # utilDom = require './util-dom'
 # utilDeps = require './util-deps'
+utilDebug = require './util-debug'
+{obj2json} = utilDebug
 Config = require './config'
 {id2Uri} = Config
 {config} = Config
@@ -58,5 +60,10 @@ seajs.emit = (name, data) ->
   emit name, data
   seajs
 
+seajs.log = (obj) ->
+  echo obj2json obj
+
 global.seajs = seajs
 global.define = Module.define
+
+global.echo = console.log
