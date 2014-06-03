@@ -60,10 +60,6 @@ seajs.emit = (name, data) ->
   emit name, data
   seajs
 
-seajs.log = (obj) ->
-  echo obj2json obj
-
 global.seajs = seajs
 global.define = Module.define
-
-global.echo = console.log
+global.prtobj = (obj) -> console.log obj2json obj
