@@ -186,7 +186,9 @@ class Config
         id = _id_ if _id_?
         configData = _configData_
         break
-    configData = configArr_rev[0] unless _id_?
+    unless _id_?
+      configData = configArr_rev[0]
+      configArr[configArr.length - 1].alias[id] = id
     id = parsePaths id, configData
     id = parseVars id, configData
     id = normalize id
