@@ -18,20 +18,6 @@ utilDom = require './util-dom'
 config = require './config'
 {id2Uri} = config
 
-# 模块加载 的 六个 阶段
-# 1 - The `module.uri` is being fetched
-#   - 获取 模块 真实 url
-# 2 - The meta data has been saved to cachedMods
-#   - 获取模块缓存
-# 3 - The `module.dependencies` are being loaded
-#   - 加载依赖模块
-# 4 - The module are ready to execute
-#   - 准备执行
-# 5 - The module is being executed
-#   - 执行模块
-# 6 - The `module.exports` is available
-#   - 执行结束
-
 getData = -> seajs.getData()
 
 class Module
@@ -45,6 +31,19 @@ class Module
     @_remain = 0        # The number of unloaded dependencies
     return @
 
+  # 模块加载 的 六个 阶段
+  # 1 - The `module.uri` is being fetched
+  #   - 获取 模块 真实 url
+  # 2 - The meta data has been saved to cachedMods
+  #   - 获取模块缓存
+  # 3 - The `module.dependencies` are being loaded
+  #   - 加载依赖模块
+  # 4 - The module are ready to execute
+  #   - 准备执行
+  # 5 - The module is being executed
+  #   - 执行模块
+  # 6 - The `module.exports` is available
+  #   - 执行结束
   @STATUS:
     FETCHING: 1
     SAVED: 2

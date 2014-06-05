@@ -1,7 +1,8 @@
 seajs.config
   base: '/config/base'
   alias:
-    'c': 'a'
+    c: 'a'
+    a: 'b'
 
 define (require) ->
 
@@ -16,7 +17,7 @@ define (require) ->
 
     it 'name is not exist', =>
 
-      b = require 'b'
+      b = require 'a'
       b.name.should.equal 'b'
 
       return

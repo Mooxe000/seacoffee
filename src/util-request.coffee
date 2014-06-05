@@ -14,7 +14,6 @@ utilEvents = require './util-events'
 {emit} = utilEvents
 
 currentlyAddingScript = null
-interactiveScript = null
 
 request = (url, callback, charset) ->
   node = createScript()

@@ -177,6 +177,7 @@ class Config
   @id2Uri: (id, refUri) ->
     configArr = getCfg()
     return unless id? or configArr.length is 0
+
     configArr_rev = configArr.slice(0).reverse()
     for _configData_ in configArr_rev
       _id_ = parseAlias id, _configData_
@@ -186,9 +187,21 @@ class Config
         id = _id_ if _id_?
         configData = _configData_
         break
+
     unless _id_?
-      configData = configArr_rev[0]
+      configData = configArr[configArr.length - 1]
+      configArr[configArr.length - 1].alias = {} unless configData.alias?
       configArr[configArr.length - 1].alias[id] = id
+
+#      configData = configArr[configArr.length - 1]
+#      _id_ = parseAlias id, configData
+#      if _id_?
+#        id =  _id_
+#      else
+#        alias = configArr[configArr.length - 1].alias
+#        configArr[configArr.length - 1].alias = {} unless alias?
+#        configArr[configArr.length - 1].alias[id] = id
+
     id = parsePaths id, configData
     id = parseVars id, configData
     id = normalize id
