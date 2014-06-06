@@ -1,1 +1,1 @@
-seajs.use 'config_base', -> mocha.run()
+seajs.use 'config_charset', -> mocha.run()

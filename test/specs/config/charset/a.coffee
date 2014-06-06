@@ -1,3 +1,4 @@
 define (require, exports) ->
 
-  exports.message = 'ÄãºÃ GBK'
+  exports.message = 'ä½ å¥½ GBK'
+  return

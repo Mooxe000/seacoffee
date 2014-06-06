@@ -20,7 +20,7 @@ request = (url, callback, charset) ->
 
   if charset?
     cs = if isFunction charset then charset url else charset
-    node.charset = cs?
+    node.charset = cs if cs?
 
   addOnload node, callback, url
 

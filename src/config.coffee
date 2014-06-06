@@ -43,6 +43,9 @@ utilPath = require './util-path'
 class Config
 
   constructor: (configData) ->
+    if configData.charset?
+      seajs.data.charset = configData.charset
+      delete configData.charset
     for field in Config.fields
       @[field] = configData[field] if configData[field]?
     return @
