@@ -1,5 +1,5 @@
 seajs.config
-  base: '/config/hasOwnProperty1'
+  base: '/config/hasownproperty'
   alias:
     hasOwnProperty: 'hasOwnProperty'
     toString: 'toString'
@@ -18,7 +18,7 @@ define (require) ->
 
     it 'hasOwnProperty', =>
 
-      hasOwnProperty = require 'hasOwnProperty1'
+      hasOwnProperty = require 'hasownproperty'
       hasOwnProperty.name
       .should.equal 'hasOwnProperty'
 
