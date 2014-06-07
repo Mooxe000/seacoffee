@@ -18,7 +18,7 @@ define (require) ->
 
     it 'hasOwnProperty', =>
 
-      hasOwnProperty = require 'hasownproperty'
+      hasOwnProperty = require 'hasOwnProperty'
       hasOwnProperty.name
       .should.equal 'hasOwnProperty'
 
