@@ -1,0 +1,1 @@
+seajs.use 'config_hasOwnProperty', -> mocha.run()

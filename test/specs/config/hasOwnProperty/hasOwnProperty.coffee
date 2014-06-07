@@ -1,0 +1,2 @@
+define ->
+  name: 'hasOwnProperty'
