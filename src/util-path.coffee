@@ -38,6 +38,7 @@ getLoaderDir = ->
 realpath = (path) ->
   # /a/b/./c/./d ==> /a/b/c/d
   path = path.replace RE.DOT, "/"
+  path = path.replace /\/+/, "/"
   # @author wh1100717
   # a//b/c ==> a/b/c
   # a///b/////c ==> a/b/c

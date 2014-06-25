@@ -1,9 +1,6 @@
 #
 # Api For Developers
 #
-
-seajs = {}
-
 # utilLang = require './util-lang'
 utilEvents = require './util-events'
 eventOn = utilEvents.on
@@ -12,54 +9,57 @@ eventOff = utilEvents.off
 utilRequest = require './util-request'
 {request} = utilRequest
 # utilDom = require './util-dom'
-# utilDeps = require './util-deps'
+#utilDeps = require './util-deps'
 utilDebug = require './util-debug'
-{obj2json} = utilDebug
-Config = require './config'
-{id2Uri} = Config
-{config} = Config
+{prtConf} = utilDebug
+{prtData} = utilDebug
+{config} = require './config'
+id2uri = require './config.id2uri'
 Module = require './module'
 {get} = Module
-{use} = Module
-{resolve} = Module
-data = require './data'
+{load} = Module
+{save} = Module
+define = require './module.define'
+use = require './module.use'
+Data = require './data'
 
-seajs.cache = data.cachedMods
+seajs = {}
 seajs.Module = Module
-seajs.require = (id) ->
-  mod = get resolve id
-  if mod.status < Module.STATUS.EXECUTING
-    mod.onload()
-    mod.exec()
-  mod.exports
-seajs.resolve = id2Uri
+
+seajs.id2uri = id2uri
 seajs.request = request
+# seajs.require = (id) ->
 
 #
 # Api For Public
 #
 seajs.version = "@VERSION" # The current version of Sea.js being used
 
-seajs.data = data
-seajs.getData = -> seajs.data
+seajs.data = new Data
 
 seajs.config = (configData) ->
   config configData
   seajs
+
 seajs.use = (ids, callback) ->
-  use ids, callback, data.cwd + "_use_" + data.cid()
+  use ids, callback
   seajs
 
 seajs.on = (name, callback) ->
   eventOn name, callback
   seajs
+
 seajs.off = (name, callback) ->
   eventOff name, callback
   seajs
+
 seajs.emit = (name, data) ->
   emit name, data
   seajs
 
 global.seajs = seajs
-global.define = Module.define
-global.prtobj = (obj) -> console.log obj2json obj
+global.define = define
+global.define.cmd = {}
+
+global.prtConf = -> do prtConf
+global.prtData = -> do prtData

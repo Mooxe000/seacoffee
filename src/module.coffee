@@ -2,33 +2,20 @@
 # module.js
 #   - The core of module loader
 #
+getdata = -> seajs.data
 utilLang = require './util-lang'
-{isObject} = utilLang
-{isArray} = utilLang
 {isFunction} = utilLang
-utilEvents = require './util-events'
-{emit} = utilEvents
-utilRequest = require './util-request'
-{request} = utilRequest
-utilDeps = require './util-deps'
-{parseDependencies} = utilDeps
-utilDom = require './util-dom'
-{getCurrentScript} = utilDom
-{getDoc} = utilDom
-config = require './config'
-{id2Uri} = config
-
-getData = -> seajs.getData()
 
 class Module
 
-  constructor: (@uri, deps) ->
-    @dependencies = deps or []
-    @exports = null
+  constructor: (@uri, @deps = []) ->
     @status = 0
+    @factory = null
+    @exports = null
     @callback = null
-    @_waitings = {}     # Who depends on me
-    @_remain = 0        # The number of unloaded dependencies
+
+    @sendRequest = null
+    @fetched = false
     return @
 
   # 模块加载 的 六个 阶段
@@ -52,153 +39,68 @@ class Module
     EXECUTING: 5
     EXECUTED: 6
 
-  # Resolve module.dependencies
-  resolve: =>
-    mod = @
-    ids = mod.dependencies
-    uris = []
-    for id in ids
-      uris.push Module.resolve id, mod.uri
-    uris
-
   # Load module.dependencies and fire onload when all done
   load: =>
     mod = @
-    data = getData()
-    {cachedMods} = data
     {STATUS} = Module
-    {get} = Module
+
+    # make sure mod fetched
+    if mod.status < STATUS.FETCHING
+      do mod.fetch
 
     # If the module is being loaded, just wait it onload call
-    # 检查状态，若已加载，则跳出
     return if mod.status >= STATUS.LOADING
-    # 设置状态 为 LOADING
     mod.status = STATUS.LOADING
 
-    uris = mod.resolve()
-    mod._remain = uris.length
+    return
 
-    # Emit `load` event for plugins such as combo plugin
-    emit "load", uris
+  # Fetch a module
+  fetch: =>
+    mod = @
+    {STATUS} = Module
+    data = do getdata
+    {addDeps} = data
+    {fetchList} = data
 
-    # Initialize modules and register waitings
-    for uri in uris
-      m = get uri
-      if m.status < STATUS.LOADED
-        # Maybe duplicate: When module has dupliate dependency, it should be it's count, not 1
-        m._waitings[mod.uri] = (m._waitings[mod.uri] or 0) + 1
-      else
-        mod._remain--
-    if mod._remain is 0
-      mod.onload()
+    return if mod.status >= STATUS.FETCHING
+    mod.status = STATUS.FETCHING
+
+    {setFetchingNow} = data
+    setFetchingNow mod.uri
+    fetchList.push uri
+
+    onRequest = ->
+      data = do getdata
+      fetchingNow = do data.getFetchingNow
+      {id2uri} = seajs
+      {get} = Module
+
+      mod = get fetchingNow
+
+      if mod.deps?
+
+        addDeps mod.uri, mod.deps
+
+        for id in mod.deps
+          m = get id2uri id
+          m.load()
+
       return
 
-    # Begin parallel loading
-    requestCache = {}
-    if cachedMods?
-      for uri in uris
-        m = cachedMods[uri] if cachedMods[uri]?
-        if m.status < STATUS.FETCHING
-          m.fetch requestCache
-        else m.load()
+    {uri} = mod
+    {charset} = data.getconfig()
+    request uri, onRequest, charset
 
-    # Send all requests at last to avoid cache bug in IE6-9. Issues#808
-    for requestUri of requestCache
-      requestCache[requestUri]() if requestCache.hasOwnProperty requestUri
+    do mod.onload if mod.callback?
 
     return
 
   # Call this method when module is loaded
   onload: =>
     mod = @
-    {STATUS} = Module
-    data = getData()
-    {cachedMods} = data
 
     mod.status = STATUS.LOADED
     mod.callback() if mod.callback?
-
-    waitings = mod._waitings
-    # Notify waiting modules to fire onload
-    for uri of waitings
-      if waitings.hasOwnProperty(uri)
-        m = cachedMods[uri]
-        m._remain -= waitings[uri]
-        m.onload() if m._remain is 0
-
-    # Reduce memory taken
-    delete mod._waitings
-    delete mod._remain
-
-    return
-
-  # Fetch a module
-  fetch: (requestCache) =>
-    mod = @
-    {STATUS} = Module
-    data = getData()
-    {fetchedList} = data
-    {fetchingList} = data
-    {callbackList} = data
-    {charset} = data
-
-    uri = mod.uri
-
-    mod.status = STATUS.FETCHING
-
-    # Emit `fetch` event for plugins such as combo plugin
-    emitData = uri: uri
-    emit "fetch", emitData
-    requestUri = emitData.requestUri or uri
-
-    # Empty uri or a non-CMD module
-    if not requestUri or fetchedList[requestUri]
-      mod.load()
-      return
-    if fetchingList[requestUri]
-      callbackList[requestUri].push mod
-      return
-
-    fetchingList[requestUri] = true
-    callbackList[requestUri] = [mod]
-
-    onRequest = ->
-      data = getData()
-      {anonymousMeta} = data
-      {fetchingList} = data
-
-      delete fetchingList[requestUri]
-      fetchedList[requestUri] = true
-
-      # Save meta data of anonymous module
-      if anonymousMeta?
-        Module.save uri, anonymousMeta
-        anonymousMeta = null
-
-      # Call callbacks
-      mods = callbackList[requestUri]
-      delete callbackList[requestUri]
-
-      m.load() while m = mods.shift()
-      return
-
-    emitData =
-      uri: uri
-      requestUri: requestUri
-      onRequest: onRequest
-      charset: charset
-
-    # Emit `request` event for plugins such as text plugin
-    emit "request", emitData
-
-    sendRequest = ->
-      request emitData.requestUri, emitData.onRequest, emitData.charset
-      return
-
-    unless emitData.requested?
-      if requestCache?
-        requestCache[emitData.requestUri] = sendRequest
-      else sendRequest()
 
     return
 
@@ -222,7 +124,7 @@ class Module
     require = (id) -> get(require.resolve id).exec()
     require.resolve = (id) -> resolve id, uri
     require.async = (ids, callback) ->
-      data = getData()
+      data = do getdata
       {cid} = data
       use ids, callback, uri + "_async_" + cid()
       require
@@ -238,109 +140,37 @@ class Module
     mod.exports = exports
     mod.status = STATUS.EXECUTED
 
-    # Emit `exec` event
-    emit "exec", mod
     exports
 
-  # Resolve id to uri
-  @resolve: (id, refUri) ->
-
-    # Emit `resolve` event for plugins such as text plugin
-    emitData =
-      id: id
-      refUri: refUri
-
-    emit "resolve", emitData
-    emitData.uri or id2Uri emitData.id, refUri
-
-  # Define a module
-  @define: (id, deps, factory) ->
-    data = getData()
-    {resolve} = Module
-    {save} = Module
-    argsLen = arguments.length
-
-    # define(factory)
-    if argsLen is 1
-      factory = id
-      id = `undefined`
-    else if argsLen is 2
-      factory = deps
-
-      # define(deps, factory)
-      if isArray(id)
-        deps = id
-        id = `undefined`
-
-        # define(id, factory)
-      else
-        deps = `undefined`
-
-    # Parse dependencies according to the module factory code
-    deps = parseDependencies factory.toString() unless isArray(deps) and isFunction factory
-    meta =
-      id: id
-      uri: resolve id
-      deps: deps
-      factory: factory
-
-    doc = getDoc()
-    # Try to derive uri in IE6-9 for anonymous modules
-    if not meta.uri and doc.attachEvent
-      script = getCurrentScript()
-      meta.uri = script.src if script
-      # NOTE: If the id-deriving methods above is failed, then falls back
-      # to use onload event to get the uri
-
-    # Emit `define` event, used in nocache plugin, seajs node version etc
-    emit "define", meta
-
-    # Save information for "saving" work in the script onload event
-    if meta.uri
-      save meta.uri, meta
-    else data.anonymousMeta = meta
-    return
-
-  # Save meta data to cachedMods
-  @save: (uri, meta) ->
-    {STATUS} = Module
-    {get} = Module
-    mod = get uri
-
-    # Do NOT override already saved modules
-    if mod.status < STATUS.SAVED
-      mod.id = meta.id or uri
-      mod.dependencies = meta.deps or []
-      mod.factory = meta.factory
-      mod.status = STATUS.SAVED
-      emit "save", mod
-    return
-
   # Get an existed module or create a new one
-  @get: (uri, deps) ->
-    data = getData()
+  @get: (uri) ->
+    data = do getdata
     {cachedMods} = data
-    cachedMods[uri] or cachedMods[uri] = new Module uri, deps
+    cachedMods[uri] or cachedMods[uri] = new Module uri
 
-  # Use function is equal to load a anonymous module
-  @use: (ids, callback, uri) ->
-    data = getData()
+  @load: (uris, callback) ->
+    data = do getdata
+    {addDeps} = data
     {cachedMods} = data
-    {get} = Module
 
-    mod = get uri, if isArray ids then ids else [ids]  # make sure typeof ids is array
+    return unless uris?
 
-    mod.callback = ->
-      exports = []
-      uris = mod.resolve()
-      for uri in uris
-        exports.push cachedMods[uri].exec()
-      callback.apply global, exports if callback?
-      delete mod.callback
+    # load
+    for uri in uris
+      addDeps uri
+      mod = Module.get uri
+      mod.load()
 
-    mod.load()
+    # exec
+    exports = []
+    for uri in uris
+      m = cachedMods[uri]
+      exp = m.exec()
+      exports.push exp
+
+    # callback
+    callback.apply global if callback?
+
     return
-
-  @define.cmd = {}
 
 module.exports = Module

@@ -22,6 +22,7 @@
     "gulp-rename": "*",
     "gulp-compile-js": "*",
     "gulp-concat": "*",
+    "gulp-order": "*",
     "gulp-wrap": "*",
     "gulp-frep": "*",
     "gulp-uglify": "*",

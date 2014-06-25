@@ -37,7 +37,10 @@
 #  stack.push fun while fun = fun.caller
 #  stack
 
-obj2json = (obj) ->
-  JSON.stringify obj, null, 2
+echo = (msg) -> console.log msg
+obj2json = (obj) -> JSON.stringify obj, null, 2
+prtData = -> echo obj2json seajs.data
+prtConf = -> echo obj2json seajs.data.config
 
-exports.obj2json = obj2json
+exports.prtConf = prtConf
+exports.prtData = prtData

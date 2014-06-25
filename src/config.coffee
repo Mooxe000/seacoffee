@@ -27,34 +27,19 @@
 
 utilLang = require './util-lang'
 {isString} = utilLang
-{isFunction} = utilLang
 {isArray} = utilLang
 {isObject} = utilLang
 utilEvents = require './util-events'
 {emit} = utilEvents
-utilPath = require './util-path'
-{RE} = utilPath
-{getLoaderDir} = utilPath
-{normalize} = utilPath
-{realpath} = utilPath
-{dirname} = utilPath
-{cwd} = utilPath
+getdata = -> seajs.data
 
 class Config
+  debug: false
+  # The charset for requesting files
+  charset: 'utf-8'
+  ids: []
 
-  constructor: (configData) ->
-    if configData.charset?
-      seajs.data.charset = configData.charset
-      delete configData.charset
-    for field in Config.fields
-      @[field] = configData[field] if configData[field]?
-    return @
-
-  getCfg = ->
-    seajs.data.config = [] unless seajs.data.config?
-    seajs.data.config
-
-  @fields = [
+  @idfields = [
     'base'
     'alias'
     'paths'
@@ -62,154 +47,70 @@ class Config
     'map'
   ]
 
-  # check field
-  countField = (configData) ->
-    count = 0
-    for dataField of configData
-      count++ unless Config.fields.indexOf(dataField) is -1
-    count
-
   @config: (configData) ->
-    # check seajs.config
-    configArr = getCfg()
-    # check field
-    count = countField configData
-    return if count <= 0
-    # mount to seajs
-    len = configArr.length
-    # create new config obj
-    if len is 0 or configData.base?
-      configNew = new Config(configData)
+    data = do getdata
+    curConfig = do data.getconfig
+    {idfields} = Config
 
-      # check base
-      unless configNew.base?
-        if len is 0
-          config.base = getLoaderDir()
-        else
-          config.base = configArr[len - 1]
+    # debug
+    curConfig.debug = configData.debug if configData.debug?
+    # charset
+    curConfig.charset = configData.charset if configData.charset?
 
-      # other field
-      for field in Config.fields
-        configNew[field] = configData[field]
+    # curids
+    return if 0 >= do ->
+      count = 0
+      for dataField of configData
+        count++ unless idfields.indexOf(dataField) is -1
+      count
+    curIds = curConfig.ids
 
-      configArr.push configNew
-    else # merge into last config obj
-      config = configArr[len - 1]
-      for field of configData
-        if isArray config[field]
-          if isArray configData[field]
-            config[field].concat configData[field]
+    # tmpid
+    tmpid = {}
+    for idfield in idfields
+      tmpid[idfield] = configData[idfield] if configData[idfield]?
+
+    # baseArr
+    curLen = curIds.length
+    baseArr = do ->
+      return [] if curLen is 0
+      baseArr = []
+      for curid in curIds
+        baseArr.push curid.base
+      baseArr
+
+    mergeId = (curid, newid) ->
+      for field of newid
+        if isArray newid[field]
+          if isArray curid[field]
+            curid[field].concat newid[field]
           else
-            config[field].push configData[field]
-        else if isObject config[field]
-          if isObject configData[field]
-            for key of configData[field]
-              config[field][key] = configData[field][key]
+            curid[field].push newid[field]
+        else if isObject newid[field]
+          if isObject curid[field]
+            for key of newid[field]
+              curid[field][key] = newid[field][key]
           else
-            # TODO Handle ERR
-        else
-          config[field] = configData[field]
+            curid[field] = newid[field]
+        else curid[filed] = newid[field]
 
-    emit "config", configData
-    return
-
-  # 从 config alias 中查找模块 url
-  parseAlias = (id, configData) ->
-    {alias} = configData
-    return null unless alias?
-    if isString alias[id]
-      alias[id]
-    else null
-
-  parsePaths = (id, configData) ->
-    {paths} = configData
-    return id unless paths?
-    m = id.match RE.PATHS
-    if m? and isString paths[m[1]]
-      id = paths[m[1]] + m[2]
-    id
-
-  parseVars = (id, configData) ->
-    {vars} = configData
-    return id unless vars?
-    if id.indexOf "{" > -1
-      id = id.replace RE.VARS, (m, key) ->
-        if isString vars[key] then vars[key] else m
-    id
-
-  addBase = (id, configData, refUri) ->
-    {base} = configData
-    first = id.charAt 0
-    # Absolute
-    # online url like 'http://'
-    if RE.ABSOLUTE.test id
-      ret = id
-
-    # Relative './blabla/blabla'
-    # 相对路径
-    else if first is "."
-      ret = realpath (if refUri? then dirname refUri else cwd()) + id
-
-    # Root '/blabla/blabla'
-    # 绝对路径
-    else if first is "/"
-      m = cwd().match RE.ROOT_DIR
-      ret = if m then m[0] + id.substring 1 else id
-
-    # Top-level
+    # merge curid tmpid
+    if curLen is 0
+      tmpid.base = getLoaderDir() unless tmpid.base?
+      curIds.push tmpid
     else
-      if base.charAt(base.length - 1) isnt '/' and id.charAt(0) isnt '/'
-        ret = base + '/' + id
+      if tmpid.base?
+        if baseArr.indexOf(tmpid.base) isnt -1
+          curid = curIds[baseArr.indexOf tmpid.base]
+          mergeId curid, tmpid
+        else
+          curIds.push tmpIds
       else
-        ret = base + id
-    ret
+        curid = curIds[curIds.length - 1]
+        mergeId curid, tmpid
 
-  parseMap = (uri, configData) ->
-    {map} = configData
-    return uri unless map?
-    ret = uri
-    for rule in map
-      if isFunction rule
-        ret = rule(uri) or uri
-      else
-        ret = uri.replace rule[0], rule[1]
-      # Only apply the first matched rule
-      break unless ret is uri
-    ret
 
-  @id2Uri: (id, refUri) ->
-    configArr = getCfg()
-    return unless id? or configArr.length is 0
 
-    configArr_rev = configArr.slice(0).reverse()
-    for _configData_ in configArr_rev
-      _id_ = parseAlias id, _configData_
-      unless _id_?
-        continue
-      else
-        id = _id_ if _id_?
-        configData = _configData_
-        break
-
-    unless _id_?
-      configData = configArr[configArr.length - 1]
-      configArr[configArr.length - 1].alias = {} unless configData.alias?
-      configArr[configArr.length - 1].alias[id] = id
-
-#      configData = configArr[configArr.length - 1]
-#      _id_ = parseAlias id, configData
-#      if _id_?
-#        id =  _id_
-#      else
-#        alias = configArr[configArr.length - 1].alias
-#        configArr[configArr.length - 1].alias = {} unless alias?
-#        configArr[configArr.length - 1].alias[id] = id
-
-    id = parsePaths id, configData
-    id = parseVars id, configData
-    id = normalize id
-    uri = addBase id, configData, refUri
-    uri = parseMap uri, configData
-    uri
+    return
 
 module.exports = Config

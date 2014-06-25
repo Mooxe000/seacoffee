@@ -25,6 +25,8 @@ uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
 gulpGrp = require 'gulp-filter'
 beautify = require 'gulp-beautify'
+order = require 'gulp-order'
+plumber = require 'gulp-plumber'
 
 ###
   PATH
@@ -36,8 +38,7 @@ nodpath = join __dirname, './node_modules'
 
 VERSION = '2.3.0'
 
-seaModule = [
-  'sea'
+modgrp = [
   'util-lang'
   'util-dom'
   'util-deps'
@@ -45,23 +46,32 @@ seaModule = [
   'util-events'
   'util-request'
   'util-debug'
-  'data'
   'config'
+  'config.id2uri'
+  'data'
   'module'
-  'Api'
+  'module.define'
+  'module.use'
 ]
 
-seaModPath = ->
-  seaModule_r = []
-  for seamod in seaModule
-    seaModule_r.push "src/#{seamod}.coffee"
-  seaModule_r
+seaModule = do ->
+  r_modgrp = modgrp.slice 0
+  r_modgrp.unshift 'sea'
+  r_modgrp.push 'api'
+  r_modgrp
 
-utilGrp = gulpGrp '**/util-*.js'
-configGrp = gulpGrp '**/config.js'
-moduleGrp = gulpGrp '**/module.js'
-dataGrp = gulpGrp '**/data.js'
-apiGrp = gulpGrp '**/Api.js'
+seaModPath = do ->
+  r_seaModule = []
+  for seamod in seaModule
+    r_seaModule.push "src/#{seamod}.coffee"
+  r_seaModule
+
+modGrpPath = do ->
+  r_modgrp = []
+  for mod in modgrp
+    r_modgrp.push "**/#{mod}.js"
+  r_modgrp
+modGrp = gulpGrp modGrpPath
 
 LicenseDEC = "Sea.js #{VERSION} | seajs.org/LICENSE.md"
 wrapStr =
@@ -101,6 +111,11 @@ wrapMod = (file) ->
 ###
   BUILD TASKS
 ###
+gulp.task 'echo', ->
+  echo seaModule
+  echo seaModPath
+  echo utilGrpPath
+
 gulp.task 'clean', ->
   gulp.src dstpath
   .pipe clean()
@@ -109,39 +124,26 @@ gulp.task 'clean', ->
   .pipe clean()
 
 gulp.task 'build', ->
-  gulp.src seaModPath()
+  gulp.src seaModPath
+  .pipe do plumber
   # compile coffee
   .pipe compile
     coffee:
       bare: true
-  # wrap utils
-  .pipe utilGrp
+  # wrap modGrp
+  .pipe modGrp
   .pipe tap wrapMod
-  .pipe concat 'util.js'
-  .pipe utilGrp.restore()
-  # wrap config
-  .pipe configGrp
-  .pipe tap wrapMod
-  .pipe concat 'config.js'
-  .pipe configGrp.restore()
-  # wrap module
-  .pipe moduleGrp
-  .pipe tap wrapMod
-  .pipe concat 'module.js'
-  .pipe moduleGrp.restore()
-  # wrap data
-  .pipe dataGrp
-  .pipe tap wrapMod
-  .pipe concat 'data.js'
-  .pipe dataGrp.restore()
-  # api
-  .pipe apiGrp
-  .pipe concat 'api.js'
-  .pipe apiGrp.restore()
+  .pipe concat 'modGrp.js'
+  .pipe modGrp.restore()
+  .pipe order [
+    '**/sea.js'
+    '**/modGrp.js'
+    '**/api.js'
+  ]
   # file list
-  .pipe tap (file) ->
-    filename = path.basename file.path, path.extname file.path
-    echo filename
+  #.pipe tap (file) ->
+  #  filename = path.basename file.path, path.extname file.path
+  #  echo filename
   # ---------
   .pipe concat 'sea-debug.js'
   .pipe wrap """
@@ -189,3 +191,10 @@ gulp.task 'dmplib', ->
 
 gulp.task 'default', ->
   runSequence 'clean', 'build', 'dmplib'
+
+gulp.task 'rungulp', ->
+  cd __dirname
+  exec 'gulp'
+
+gulp.task 'watch', ->
+  gulp.watch seaModPath, ['rungulp']
