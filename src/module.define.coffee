@@ -2,6 +2,8 @@ getdata = -> seajs.data
 utilLang = require './util-lang'
 {isArray} = utilLang
 {isFunction} = utilLang
+utilDom = require './util-dom'
+{getCurrentScript} = utilDom
 utilDeps = require './util-deps'
 {parseDependencies} = utilDeps
 
@@ -31,31 +33,40 @@ define = (args...) ->
       deps = args[1]
       factory = args[2]
     else return
-  # ------------
 
-  {id2uri} = seajs
 
   # ------------
   # get deps
   #   - Parse dependencies according to the module factory code
   # ------------
-  deps = parseDependencies factory.toString() if not isArray(deps) and isFunction factory
-  _deps = []
-  for dep in deps
-    _deps.push id2uri dep
-  # ------------
+  _deps = parseDependencies factory.toString() if not isArray(deps) and isFunction factory
+  {id2uri} = seajs
 
-  data = do getdata
-  fetchingNow = do data.getFetchingNow
+  _deps_ = []
 
-  uri = id2uri id if id?
-  uri = if uri is fetchingNow then uri else fetchingNow
+  if isArray(deps) and deps.length > 0
+    for dep in deps
+      _deps_.push id2uri dep if _deps_.indexOf dep is -1
+  if isArray(_deps) and _deps.length > 0
+    for _dep in _deps
+      _deps_.push id2uri _dep if _deps_.indexOf _dep is -1
+
+  script = do getCurrentScript
+  uri = script.src
+
+  unless uri?
+    data = do getdata
+    lastfetch = do data.getLastFetch
+    uri = id2uri id if id?
+    uri = if uri is lastfetch then uri else fetchingNow
 
   mod = Module.get uri
-
-  mod.id = id
-  mod.deps = _deps
+  mod.deps = _deps_ if _deps_.length isnt 0
   mod.factory = factory
+
+  if isArray(mod.deps) and mod.deps.length > 0
+    {addDeps} = do getdata
+    addDeps mod.uri, mod.deps
 
   return
 

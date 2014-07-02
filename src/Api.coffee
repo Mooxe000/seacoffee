@@ -1,26 +1,31 @@
 #
 # Api For Developers
 #
+
 # utilLang = require './util-lang'
+
 utilEvents = require './util-events'
 eventOn = utilEvents.on
 eventOff = utilEvents.off
 {emit} = utilEvents
+
 utilRequest = require './util-request'
 {request} = utilRequest
+
 # utilDom = require './util-dom'
-#utilDeps = require './util-deps'
-utilDebug = require './util-debug'
-{prtConf} = utilDebug
-{prtData} = utilDebug
+# utilDeps = require './util-deps'
+
 {config} = require './config'
 id2uri = require './config.id2uri'
+
 Module = require './module'
 {get} = Module
 {load} = Module
 {save} = Module
+
 define = require './module.define'
 use = require './module.use'
+
 Data = require './data'
 
 seajs = {}
@@ -36,6 +41,7 @@ seajs.request = request
 seajs.version = "@VERSION" # The current version of Sea.js being used
 
 seajs.data = new Data
+seajs.getdata = -> seajs.data
 
 seajs.config = (configData) ->
   config configData
@@ -61,5 +67,21 @@ global.seajs = seajs
 global.define = define
 global.define.cmd = {}
 
-global.prtConf = -> do prtConf
-global.prtData = -> do prtData
+#
+# Debug Tools
+#
+utilDebug = require './util-debug'
+
+{echoConf} = utilDebug
+{echoDeps} = utilDebug
+{echoDepsFlat} = utilDebug
+{echoEventLog} = utilDebug
+{echoLastFetch} = utilDebug
+{echoCurrentNode} = utilDebug
+
+global.echoConf = -> do echoConf
+global.echoDeps = -> do echoDeps
+global.echoDepsFlat = -> do echoDepsFlat
+global.echoEventLog = -> do echoEventLog
+global.echoLastFetch = -> do echoLastFetch
+global.echoCurrentNode = -> do echoCurrentNode

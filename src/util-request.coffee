@@ -3,7 +3,6 @@
 #   - The utilities for requesting script and style filesl
 # ref: tests/research/load-js-css/test.htm
 #
-
 utilLang = require './util-lang'
 {isFunction} = utilLang
 utilDom = require './util-dom'
@@ -13,7 +12,7 @@ utilDom = require './util-dom'
 utilEvents = require './util-events'
 {emit} = utilEvents
 
-currentlyAddingScript = null
+getdata = -> do seajs.getdata
 
 request = (url, callback, charset) ->
   node = createScript()
@@ -26,11 +25,13 @@ request = (url, callback, charset) ->
 
   node.async = true
   node.src = url
-  
+
+  data = do getdata
+  {setCurrentNode} = data
   # For some cache cases in IE 6-8, the script executes IMMEDIATELY after
   # the end of the insert execution, so use `currentlyAddingScript` to
   # hold current node, for deriving url in `define` call
-  currentlyAddingScript = node
+  setCurrentNode node
 
   baseElement = getBaseEle()
   # ref: #185 & http://dev.jquery.com/ticket/2709
@@ -39,7 +40,6 @@ request = (url, callback, charset) ->
     head.insertBefore node, baseElement
   else head.appendChild node
 
-  currentlyAddingScript = null
   return
 
 addOnload = (node, callback, url) ->

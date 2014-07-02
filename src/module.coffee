@@ -2,9 +2,12 @@
 # module.js
 #   - The core of module loader
 #
-getdata = -> seajs.data
 utilLang = require './util-lang'
 {isFunction} = utilLang
+{isArray} = utilLang
+{isString} = utilLang
+
+getdata = -> do seajs.getdata
 
 class Module
 
@@ -12,28 +15,11 @@ class Module
     @status = 0
     @factory = null
     @exports = null
-    @callback = null
-
-    @sendRequest = null
-    @fetched = false
     return @
 
-  # 模块加载 的 六个 阶段
-  # 1 - The `module.uri` is being fetched
-  #   - 获取 模块 真实 url
-  # 2 - The meta data has been saved to cachedMods
-  #   - 获取模块缓存
-  # 3 - The `module.dependencies` are being loaded
-  #   - 加载依赖模块
-  # 4 - The module are ready to execute
-  #   - 准备执行
-  # 5 - The module is being executed
-  #   - 执行模块
-  # 6 - The `module.exports` is available
-  #   - 执行结束
   @STATUS:
     FETCHING: 1
-    SAVED: 2
+    FETCHED: 2
     LOADING: 3
     LOADED: 4
     EXECUTING: 5
@@ -42,56 +28,55 @@ class Module
   # Load module.dependencies and fire onload when all done
   load: =>
     mod = @
+
     {STATUS} = Module
+
+    # If the module is being loaded, just wait it onload call
+    return if mod.status >= STATUS.LOADING
 
     # make sure mod fetched
     if mod.status < STATUS.FETCHING
       do mod.fetch
 
-    # If the module is being loaded, just wait it onload call
-    return if mod.status >= STATUS.LOADING
     mod.status = STATUS.LOADING
+    emit 'load', mod.uri
+
+    data = do getdata
+    {events} = data
+    {log} = events
+    log.push load: mod.uri
 
     return
 
   # Fetch a module
   fetch: =>
     mod = @
+
     {STATUS} = Module
+
     data = do getdata
-    {addDeps} = data
-    {fetchList} = data
+    {setLastFetch} = data
+    {events} = data
+    {log} = events
 
     return if mod.status >= STATUS.FETCHING
     mod.status = STATUS.FETCHING
-
-    {setFetchingNow} = data
-    setFetchingNow mod.uri
-    fetchList.push uri
+    emit 'fetch', mod.uri
+    log.push fetch: mod.uri
+    setLastFetch mod.uri
 
     onRequest = ->
       data = do getdata
-      fetchingNow = do data.getFetchingNow
-      {id2uri} = seajs
-      {get} = Module
 
-      mod = get fetchingNow
-
-      if mod.deps?
-
-        addDeps mod.uri, mod.deps
-
-        for id in mod.deps
-          m = get id2uri id
-          m.load()
+      do mod.onload
 
       return
 
     {uri} = mod
     {charset} = data.getconfig()
+    emit 'request', mod.uri
     request uri, onRequest, charset
 
-    do mod.onload if mod.callback?
 
     return
 
@@ -99,18 +84,57 @@ class Module
   onload: =>
     mod = @
 
+    #
+    # status
+    #
+    {STATUS} = Module
     mod.status = STATUS.LOADED
-    mod.callback() if mod.callback?
+
+    #
+    # callback
+    #
+    data = do getdata
+    {getDepsList} = data
+    {getDepsListFlat} = data
+    depsroot = do ->
+      depsObj = getDepsList mod.uri
+      return depsObj if isString depsObj
+      keys = Object.keys depsObj
+      if isArray(keys) and keys.length is 1
+        return keys[0]
+    depsarry = getDepsListFlat mod.uri
+
+    uris = null
+    callback = null
+    for _callback in data.callbacks
+      continue if _callback.execed is true
+      _uris = _callback.uris
+      if _uris.indexOf depsroot isnt -1
+        uris = _uris
+        callback = _callback.callback
+
+    {cachedMods} = data
+    count = 0
+    for uri in depsarry
+      if not cachedMods[uri]? or cachedMods[uri].status < STATUS.LOADED
+        m = get uri
+        do m.load
+        break
+      else
+        count++
+
+    do callback if count is depsarry.length
 
     return
 
   # Execute a module
   exec: =>
     mod = @
+
     {STATUS} = Module
     {get} = Module
-    {use} = Module
-    {resolve} = Module
+
+    {id2uri} = seajs
 
     # When module is executed, DO NOT execute it again. When module
     # is being executed, just return `module.exports` too, for avoiding
@@ -119,23 +143,16 @@ class Module
     mod.status = STATUS.EXECUTING
 
     # Create require
-    {uri} = mod
-
-    require = (id) -> get(require.resolve id).exec()
-    require.resolve = (id) -> resolve id, uri
+    require = (id) -> get(id2uri id).exec()
+    require.resolve = (id) -> id2uri id
     require.async = (ids, callback) ->
-      data = do getdata
-      {cid} = data
-      use ids, callback, uri + "_async_" + cid()
+      seajs.use ids, callback
       require
 
     # Exec factory
     {factory} = mod
     exports = if isFunction factory then factory require, mod.exports = {}, mod else factory
     exports = mod.exports unless exports?
-
-    # Reduce memory leak
-    delete mod.factory
 
     mod.exports = exports
     mod.status = STATUS.EXECUTED
@@ -155,21 +172,32 @@ class Module
 
     return unless uris?
 
+    class Callback
+      constructor: (@uris, callback) ->
+        @execed = false
+        @callback = =>
+          # exec
+          exports = []
+          for uri in uris
+            m = cachedMods[uri]
+            exp = m.exec()
+            exports.push exp
+
+          @execed = true
+          # callback
+          callback.apply global, exports if callback?
+
+    data.callbacks.push new Callback uris, callback
+
+    {STATUS} = Module
     # load
     for uri in uris
       addDeps uri
       mod = Module.get uri
-      mod.load()
-
-    # exec
-    exports = []
-    for uri in uris
-      m = cachedMods[uri]
-      exp = m.exec()
-      exports.push exp
-
-    # callback
-    callback.apply global if callback?
+      if mod.status < STATUS.LOADED
+        do mod.load
+      else
+        do mod.onload
 
     return
 

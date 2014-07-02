@@ -34,10 +34,11 @@ utilEvents = require './util-events'
 getdata = -> seajs.data
 
 class Config
-  debug: false
-  # The charset for requesting files
-  charset: 'utf-8'
-  ids: []
+  constructor: ->
+    @debug = false
+    # The charset for requesting files
+    @charset = 'utf-8'
+    @ids = []
 
   @idfields = [
     'base'
@@ -108,8 +109,6 @@ class Config
       else
         curid = curIds[curIds.length - 1]
         mergeId curid, tmpid
-
-
 
     return
 

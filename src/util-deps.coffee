@@ -68,19 +68,20 @@ findindeps = (uri, depsArr, stack = []) ->
     else if isObject _uri
       for k, v of _uri
         if k is uri
-          return -1
+          stack.push _i
+          return stack
         else if isArray v
           stack.push _i
           stack.push k
           _stack = stack.toString()
-          _r = findindeps uri, depsArr[_i][k], stack
-          return -1 if _r is -1
+          stack = findindeps uri, depsArr[_i][k], stack
           if not _stack? or _stack is stack.toString()
             stack.pop()
             stack.pop()
             continue
           else
             return stack
+  return stack
 
 exports.RE = RE
 exports.findindeps = findindeps

@@ -3,6 +3,7 @@
 #   - The utilities for operate dom object
 #
 getDoc = -> document
+getdata = -> seajs.data
 
 getHead = ->
   doc = getDoc()
@@ -16,19 +17,14 @@ getBaseEle = ->
   head = getHead()
   head.getElementsByTagName("base")[0]
 
-getScriptAbsoluteSrc = (node) ->
-  if node.hasAttribute
-    # non-IE6/7
-    node.src
-    # see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
-  else node.getAttribute "src", 4
-
 createScript = ->
   doc = getDoc()
   doc.createElement 'script'
 
-getCurrentScript = (currentlyAddingScript, interactiveScript) ->
-  return currentlyAddingScript if currentlyAddingScript?
+getCurrentScript = ->
+  data = do getdata
+  currentNode = do data.getCurrentNode
+  return currentNode if currentNode?
 
   # For IE6-9 browsers, the script onload event may not fire right
   # after the script is evaluated. Kris Zyp found that it
@@ -46,16 +42,29 @@ getCurrentScript = (currentlyAddingScript, interactiveScript) ->
       interactiveScript = script
       return interactiveScript
 
+getScriptAbsoluteSrc = (node) ->
+  if node.hasAttribute
+    # non-IE6/7
+    node.src
+    # see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+  else node.getAttribute "src", 4
+
 getLoaderScript = ->
   doc = getDoc()
   scripts = getScripts()
   doc.getElementById('seajsnode') or scripts[scripts.length - 1]
 
+getLoaderDir = ->
+  loaderScript = do getLoaderScript
+  data = do getdata
+  cwd = do data.getcwd
+  dirname getScriptAbsoluteSrc loaderScript || cwd
+
 exports.getDoc = getDoc
 exports.getHead = getHead
 exports.getScripts = getScripts
 exports.getBaseEle = getBaseEle
-exports.getScriptAbsoluteSrc = getScriptAbsoluteSrc
 exports.createScript = createScript
-exports.getCurrentScript = getCurrentScript
 exports.getLoaderScript = getLoaderScript
+exports.getScriptAbsoluteSrc = getScriptAbsoluteSrc
+exports.getCurrentScript = getCurrentScript

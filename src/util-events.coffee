@@ -3,7 +3,7 @@
 #   - The minimal events support
 #
 getEvents = ->
-  data = seajs.getData()
+  data = seajs.getdata()
   {events} = data
   events
 

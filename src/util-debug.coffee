@@ -39,8 +39,17 @@
 
 echo = (msg) -> console.log msg
 obj2json = (obj) -> JSON.stringify obj, null, 2
-prtData = -> echo obj2json seajs.data
-prtConf = -> echo obj2json seajs.data.config
 
-exports.prtConf = prtConf
-exports.prtData = prtData
+echoConf = -> echo obj2json do seajs.data.getconfig
+echoDeps = -> echo obj2json do seajs.data.getDepsList
+echoDepsFlat = -> echo obj2json do seajs.data.getDepsListFlat
+echoEventLog = -> echo obj2json seajs.data.events.log
+echoLastFetch = -> echo obj2json do seajs.data.getLastFetch
+echoCurrentNode = -> echo do seajs.data.getCurrentNode
+
+exports.echoConf = echoConf
+exports.echoDeps = echoDeps
+exports.echoDepsFlat = echoDepsFlat
+exports.echoEventLog = echoEventLog
+exports.echoLastFetch = echoLastFetch
+exports.echoCurrentNode = echoCurrentNode
