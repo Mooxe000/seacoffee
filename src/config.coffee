@@ -105,7 +105,7 @@ class Config
           curid = curIds[baseArr.indexOf tmpid.base]
           mergeId curid, tmpid
         else
-          curIds.push tmpIds
+          curIds.push tmpid
       else
         curid = curIds[curIds.length - 1]
         mergeId curid, tmpid

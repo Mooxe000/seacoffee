@@ -36,6 +36,10 @@ getLoaderDir = ->
 # realpath("http://test.com/a//./b/../c") ==> "http://test.com/a/c"
 # 规范 URL
 realpath = (path) ->
+  httphead = false
+  if path.substr(0, 7) is 'http://'
+    httphead = true
+    path = path.replace 'http://', ''
   # /a/b/./c/./d ==> /a/b/c/d
   path = path.replace RE.DOT, "/"
   path = path.replace /\/+/, "/"
@@ -46,6 +50,7 @@ realpath = (path) ->
   path = path.replace RE.MULTI_SLASH, "$1/"
   # a/b/c/../../d  ==>  a/b/../d  ==>  a/d
   path = path.replace RE.DOUBLE_DOT, "/" while path.match RE.DOUBLE_DOT
+  path = "http://#{path}" if httphead
   path
 
 # Normalize an id

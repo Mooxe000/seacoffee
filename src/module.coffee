@@ -66,17 +66,13 @@ class Module
     setLastFetch mod.uri
 
     onRequest = ->
-      data = do getdata
-
       do mod.onload
-
       return
 
     {uri} = mod
     {charset} = data.getconfig()
     emit 'request', mod.uri
     request uri, onRequest, charset
-
 
     return
 
