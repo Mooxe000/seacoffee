@@ -58,7 +58,7 @@ addOnload = (node, callback, url) ->
     callback()
     return
 
-  if supportOnload?
+  if supportOnload
     node.onload = onload
     node.onerror = ->
       emit "error",
