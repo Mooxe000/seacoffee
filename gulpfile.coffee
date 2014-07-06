@@ -56,8 +56,7 @@ modgrp = [
 
 seaModule = do ->
   r_modgrp = modgrp.slice 0
-  r_modgrp.unshift 'sea'
-  r_modgrp.push 'api'
+  r_modgrp.push 'sea'
   r_modgrp
 
 seaModPath = do ->
@@ -80,6 +79,9 @@ wrapStr =
    * #{LicenseDEC}
    */
   (function(global, undefined) {
+    if (global.seajs != null) {
+      return;
+    }
     var require;
     require = function(path) {
       return require[path];
@@ -136,9 +138,8 @@ gulp.task 'build', ->
   .pipe concat 'modGrp.js'
   .pipe modGrp.restore()
   .pipe order [
-    '**/sea.js'
     '**/modGrp.js'
-    '**/api.js'
+    '**/sea.js'
   ]
   # file list
   #.pipe tap (file) ->

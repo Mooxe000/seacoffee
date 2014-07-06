@@ -27,11 +27,10 @@ request = (url, callback, charset) ->
   node.src = url
 
   data = do getdata
-  {setCurrentNode} = data
   # For some cache cases in IE 6-8, the script executes IMMEDIATELY after
   # the end of the insert execution, so use `currentlyAddingScript` to
   # hold current node, for deriving url in `define` call
-  setCurrentNode node
+  data.currentlyAddingScript = node
 
   baseElement = getBaseEle()
   # ref: #185 & http://dev.jquery.com/ticket/2709

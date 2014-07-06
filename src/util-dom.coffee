@@ -23,8 +23,10 @@ createScript = ->
 
 getCurrentScript = ->
   data = do getdata
-  currentNode = do data.getCurrentNode
-  return currentNode if currentNode?
+  {currentlyAddingScript} = data
+  {interactiveScript} = data
+
+  return currentlyAddingScript if currentlyAddingScript?
 
   # For IE6-9 browsers, the script onload event may not fire right
   # after the script is evaluated. Kris Zyp found that it
@@ -36,7 +38,6 @@ getCurrentScript = ->
   scripts = getScripts()
 
   scripts = scripts.reverse()
-
   for script in scripts
     if script.readyState is "interactive"
       interactiveScript = script

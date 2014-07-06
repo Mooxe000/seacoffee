@@ -35,7 +35,6 @@ define (require) ->
       requireC = ->
         deferred = Q.defer()
         require.async 'c', (c) ->
-          console.log c
           deferred.resolve c.name
         deferred.promise
 

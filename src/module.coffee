@@ -11,12 +11,6 @@ getdata = -> do seajs.getdata
 
 class Module
 
-  constructor: (@uri, @deps = []) ->
-    @status = 0
-    @factory = null
-    @exports = null
-    return @
-
   @STATUS:
     FETCHING: 1
     FETCHED: 2
@@ -24,6 +18,12 @@ class Module
     LOADED: 4
     EXECUTING: 5
     EXECUTED: 6
+
+  constructor: (@uri, @deps = []) ->
+    @status = 0
+    @factory = null
+    @exports = null
+    return @
 
   # Load module.dependencies and fire onload when all done
   load: =>

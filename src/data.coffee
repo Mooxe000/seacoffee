@@ -34,9 +34,8 @@ class Data
   setLastFetch: (fatchuri) => lastFetch = fatchuri
 
   # currentNode
-  currentNode = null
-  setCurrentNode: (node) => currentNode = node
-  getCurrentNode: => currentNode
+  currentlyAddingScript = null
+  interactiveScript = null
 
   cachedMods: {}
   events: {
